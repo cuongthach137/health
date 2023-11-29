@@ -8,17 +8,14 @@ import { MqttService } from './mqtt.service';
 const logger = new Logger('MQTT');
 @Controller('mqtt')
 export class MqttController {
-  constructor(
-    @Inject('MQTT_SERVICE') private client: ClientProxy,
-    private readonly mqttService: MqttService,
-    private readonly medicalStatService: MedicalStatService,
-  ) {}
+  constructor(@Inject('MQTT_SERVICE') private client: ClientProxy, private readonly mqttService: MqttService) {}
 
-  @MessagePattern(NODE_TOPIC)
+  @MessagePattern('trung-health')
   async getDevicePayload(@Payload() data: string, @Ctx() context: MqttContext) {
     const topic = context.getTopic();
-    logger.log(`Receive message Topic: ${topic}`);
-    logger.log(`Receive message Payload: ${data}`);
+
+    console.log(`Receive message Topic: ${topic}`);
+    console.log(`Receive message Payload: ${data}`);
     await this.mqttService.handleMQTTNodeTopic(topic, data);
     return;
   }

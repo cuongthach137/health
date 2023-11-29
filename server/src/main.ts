@@ -1,20 +1,11 @@
-import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { MQTT_BROKER, PORT } from './config';
-import { Transport, MicroserviceOptions } from '@nestjs/microservices';
-
-const logger = new Logger('Server');
+import { Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
-  await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
-    transport: Transport.MQTT,
-    options: {
-      url: MQTT_BROKER,
-    },
-  });
   app.setGlobalPrefix('/api');
   app.enableCors();
 
@@ -27,11 +18,18 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   try {
+    app.connectMicroservice({
+      transport: Transport.MQTT,
+      options: {
+        url: MQTT_BROKER,
+      },
+    });
     await app.listen(PORT, () => {
-      logger.log(`Successfully listening on PORT: ${PORT}`);
+      console.log(`Successfully listening on PORT: ${PORT}`);
+      console.log(MQTT_BROKER);
     });
   } catch (error) {
-    logger.log(`Failed to start server on PORT: ${PORT}`);
+    console.log(`Failed to start server on PORT: ${PORT}`);
   }
 }
 
