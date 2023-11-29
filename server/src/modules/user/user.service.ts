@@ -56,6 +56,10 @@ export class UserService {
       }
 
       await this.userRepository.persistAndFlush(newUser);
+      delete newUser.password;
+      delete newUser.notifications;
+      delete newUser.schedules;
+
       return newUser;
     } catch (error) {
       logger.log(`Error create account: ${error}`);

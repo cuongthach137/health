@@ -9,7 +9,7 @@ const logger = new Logger('Server');
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
-  const mqttApp = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
+  await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
     transport: Transport.MQTT,
     options: {
       url: MQTT_BROKER,
@@ -26,10 +26,13 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(PORT, () => {
-    logger.log(`Successfully listening on PORT: ${PORT}`);
-  });
-  await mqttApp.listen();
+  try {
+    await app.listen(PORT, () => {
+      logger.log(`Successfully listening on PORT: ${PORT}`);
+    });
+  } catch (error) {
+    logger.log(`Failed to start server on PORT: ${PORT}`);
+  }
 }
 
 bootstrap();

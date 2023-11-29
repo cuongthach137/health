@@ -2,6 +2,7 @@ import * as argon2 from 'argon2';
 import { Injectable } from '@nestjs/common';
 import { UserService } from 'src/modules/user/user.service';
 import { TokenService } from 'src/token/token.service';
+import { CreateUserDto } from 'src/modules/user/dto/create-user.dto';
 
 export interface UserRequest {
   id: number;
@@ -20,7 +21,7 @@ export class AuthService {
 
     const isMatchPassword = await argon2.verify(user.password, password);
     if (user && isMatchPassword) {
-      const { password, ...result } = user;
+      const result = user;
       return { ...result, roleId };
     }
     return { message: 'Wrong password!' };
@@ -58,11 +59,19 @@ export class AuthService {
     };
   }
 
+  async signup(user: CreateUserDto) {
+    const result = await this.userService.create(user);
+    const userPayload = { id: result.id, role: result.role, email: result.email };
+    const accessToken = await this.tokenService.signToken(userPayload);
+    const refreshToken = await this.tokenService.signRefreshToken(userPayload);
+    return { ...result, accessToken, refreshToken };
+  }
+
   async logout(user: UserRequest) {
-    return await this.tokenService.removeRefreshToken(user);
+    return this.tokenService.removeRefreshToken(user);
   }
 
   async logoutAll(user: UserRequest) {
-    return await this.tokenService.removeRefreshTokenAll(user);
+    return this.tokenService.removeRefreshTokenAll(user);
   }
 }
